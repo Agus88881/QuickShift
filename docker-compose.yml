@@ -1,0 +1,30 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: quickshift_db
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrongPassword123!
+    ports:
+      - "1433:1433"
+
+  api:
+    build:
+      context: .
+      dockerfile: QuickShift.Api/Dockerfile
+    container_name: quickshift_api
+    environment:
+      - ConnectionStrings__MasterConnection=Server=db;Database=QuickShift_Master;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True
+    ports:
+      - "7094:8080"
+    depends_on:
+      - db
+
+  client:
+    build:
+      context: ./QuickShift.Client
+    container_name: quickshift_angular
+    ports:
+      - "4200:80"
+    depends_on:
+      - api

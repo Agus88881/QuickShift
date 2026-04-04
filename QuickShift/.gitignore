@@ -1,7 +1,0 @@
-.vs/
-appsettings.json
-appsettings.Development.json
-**/bin/
-**/obj/
-*.user
-PublishProfiles/

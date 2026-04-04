@@ -1,0 +1,18 @@
+.vs/
+appsettings.json
+appsettings.Development.json
+**/bin/
+**/obj/
+*.user
+PublishProfiles/
+# --- Angular Specific ---
+**/node_modules/
+**/.angular/
+**/dist/
+.editorconfig
+.browserslistrc
+
+# --- Docker & System ---
+.dockerignore
+.DS_Store
+Thumbs.db

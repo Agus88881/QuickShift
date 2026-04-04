@@ -1,0 +1,107 @@
+.dashboard-container {
+  padding: 40px 20px;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  max-width: 800px;
+  margin: auto;
+  color: #2c3e50;
+
+  h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: 700;
+  }
+}
+
+.info-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  border: 1px solid #e1e8ed;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+
+  p {
+    margin: 10px 0;
+    font-size: 16px;
+  }
+
+  .role-badge {
+    background: #e1f5fe;
+    color: #0288d1;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: bold;
+  }
+}
+
+.admin-box {
+  background: #f8f9fa;
+  border: 2px dashed #cbd5e0;
+  padding: 25px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+
+  h3 {
+    margin-top: 0;
+    color: #2d3748;
+  }
+
+  .input-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 15px;
+
+    input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 15px;
+      
+      &:focus {
+        outline: none;
+        border-color: #3182ce;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+      }
+    }
+
+    button {
+      background: #38a169;
+      color: white;
+      border: none;
+      padding: 0 25px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      &:hover:not(:disabled) {
+        background: #2f855a;
+      }
+
+      &:disabled {
+        background: #a0aec0;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+.btn-logout {
+  background: #f56565;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s;
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
