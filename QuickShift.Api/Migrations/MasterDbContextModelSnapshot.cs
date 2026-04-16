@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using QuickShift.Data;
 
 #nullable disable
 
@@ -48,20 +47,16 @@ namespace QuickShift.Migrations
 
             modelBuilder.Entity("QuickShift.Models.UserTenant", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("UserEmail")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
 
-                    b.Property<string>("UserEmail")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserEmail", "TenantId");
 
                     b.HasIndex("TenantId");
 

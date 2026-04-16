@@ -5,7 +5,7 @@
     "rootDir": "./",
     "types": []
   },
-  "files": [], // <--- Dejalo vacío así
+  "files": [],
   "include": [
     "src/**/*.spec.ts",
     "src/**/*.d.ts"

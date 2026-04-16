@@ -56,6 +56,7 @@ import { ShiftService } from '../../core/services/shift';
     </div>
   `
 })
+
 export class DashboardComponent implements OnInit {
   private jwtHelper = new JwtHelperService();
   
@@ -65,6 +66,7 @@ export class DashboardComponent implements OnInit {
   tenantId: number = 0;
   isWorking: boolean = false;
   loadingShift: boolean = false;
+  loadingStatus: boolean = true;
 
   constructor(
     private router: Router, 
@@ -75,18 +77,35 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.tenantDisplayName = localStorage.getItem('tenantName') || 'Desconocido';
-    const savedWorkingStatus = localStorage.getItem('isWorking');
-    this.isWorking = savedWorkingStatus === 'true';
-
+    
     const token = localStorage.getItem('jwt_token');
     if (token) {
       const decodedToken = this.jwtHelper.decodeToken(token);
       this.userRole = decodedToken["role"] || decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
       this.tenantId = decodedToken["tenantId"];
     }
+
+    this.checkStatus();
   }
 
-  toggleShift() {
+  checkStatus() {
+    this.loadingStatus = true;
+    this.shiftService.getStatus().subscribe({
+      next: (res) => {
+        this.isWorking = res.isClockedIn; 
+        this.loadingStatus = false;
+        this.cdr.detectChanges();
+        console.log("Estado sincronizado con el servidor:", res);
+      },
+      error: (err) => {
+        console.error("No se pudo obtener el estado del turno", err);
+        this.loadingStatus = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+ toggleShift() {
     this.loadingShift = true;
     
     if (this.isWorking) {
@@ -94,7 +113,6 @@ export class DashboardComponent implements OnInit {
         next: (res) => {
           this.isWorking = false;
           this.loadingShift = false;
-          localStorage.setItem('isWorking', 'false');
           this.cdr.detectChanges(); 
           alert(`Turno cerrado. Horas trabajadas: ${res.hoursWorked}`);
         },
@@ -109,7 +127,6 @@ export class DashboardComponent implements OnInit {
         next: (res) => {
           this.isWorking = true;
           this.loadingShift = false;
-          localStorage.setItem('isWorking', 'true');
           this.cdr.detectChanges(); 
         },
         error: (err) => {

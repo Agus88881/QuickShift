@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { JwtHelperService } from '@auth0/angular-jwt'; // <--- Importamos esto
+import { JwtHelperService } from '@auth0/angular-jwt'; 
 import { environment } from '../../../environments/environment';
 
 export interface ShiftResponse {
@@ -12,11 +12,17 @@ export interface ShiftResponse {
   hoursWorked?: number;
 }
 
+export interface ShiftStatus {
+  isClockedIn: boolean;
+  startTime?: string;
+  shiftId?: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class ShiftService {
-  private apiUrl = `${environment.apiUrl}/shift`;
+  private apiUrl = `${environment.apiUrl}/shift`; 
   private jwtHelper = new JwtHelperService();
 
   constructor(private http: HttpClient) {}
@@ -27,7 +33,6 @@ export class ShiftService {
 
     if (token) {
       const decodedToken = this.jwtHelper.decodeToken(token);
-      // Extraemos el tenantId que guardamos en el Backend (C#)
       tenantId = decodedToken["tenantId"] || '0';
     }
     
@@ -35,6 +40,10 @@ export class ShiftService {
       'Authorization': `Bearer ${token}`,
       'X-Tenant-Id': tenantId 
     });
+  }
+
+  getStatus(): Observable<ShiftStatus> {
+    return this.http.get<ShiftStatus>(`${this.apiUrl}/status`, { headers: this.getHeaders() });
   }
 
   clockIn(): Observable<ShiftResponse> {

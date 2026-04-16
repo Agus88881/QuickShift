@@ -1,5 +1,5 @@
 import { Component, OnInit, NgZone } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router'; // <--- Agregamos ActivatedRoute
+import { Router, ActivatedRoute } from '@angular/router';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth';
 
@@ -20,20 +20,29 @@ export class LoginComponent implements OnInit {
     private ngZone: NgZone
   ) {}
 
-  private static googleInitialized = false;
 
   ngOnInit(): void {
-    this.tenantName = this.route.snapshot.paramMap.get('tenantName') || '';
+    this.route.paramMap.subscribe(params => {
+      this.tenantName = params.get('tenantName') || '';
+      
+      console.error("1. LA URL DICE QUE EL TENANT ES:", this.tenantName);
+      
+      this.iniciarGoogle();
+    });
+  }
 
+  iniciarGoogle() {
     const initGoogle = () => {
       if (typeof google !== 'undefined') {
-        if (!LoginComponent.googleInitialized) {
-          google.accounts.id.initialize({
-            client_id: environment.googleClientId,
-            callback: this.handleGoogleResponse.bind(this)
-          });
-          LoginComponent.googleInitialized = true;
-        }
+        console.error("2. INICIALIZANDO GOOGLE CON TENANT:", this.tenantName);
+        
+        google.accounts.id.initialize({
+          client_id: environment.googleClientId,
+          callback: (response: any) => {
+             console.error("3. GOOGLE RESPONDIÓ. ENVIANDO A BACKEND CON TENANT:", this.tenantName);
+             this.handleGoogleResponse(response);
+          }
+        });
 
         google.accounts.id.renderButton(
           document.getElementById('google-btn'),

@@ -12,11 +12,9 @@ export class AuthGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
   canActivate(): Observable<boolean> {
-    // Nos suscribimos a la variable reactiva de tu AuthService
     return this.authService.isLoggedIn$.pipe(
       tap(isLoggedIn => {
         if (!isLoggedIn) {
-          // Si no está logueado, lo pateamos a la ruta de login (que armaremos después)
           this.router.navigate(['/auth/login']); 
         }
       })

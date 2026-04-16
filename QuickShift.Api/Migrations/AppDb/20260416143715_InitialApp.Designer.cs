@@ -9,11 +9,11 @@ using QuickShift.Data;
 
 #nullable disable
 
-namespace QuickShift.Migrations
+namespace QuickShift.Migrations.AppDb
 {
-    [DbContext(typeof(MasterDbContext))]
-    [Migration("20260404001322_AddUserTenants")]
-    partial class AddUserTenants
+    [DbContext(typeof(AppDbContext))]
+    [Migration("20260416143715_InitialApp")]
+    partial class InitialApp
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,37 @@ namespace QuickShift.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("QuickShift.Models.Tenant", b =>
+            modelBuilder.Entity("QuickShift.Models.Shift", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ClockIn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ClockOut")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Shifts");
+                });
+
+            modelBuilder.Entity("QuickShift.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -36,7 +66,7 @@ namespace QuickShift.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DatabaseName")
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -44,42 +74,27 @@ namespace QuickShift.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
-
-                    b.ToTable("Tenants");
-                });
-
-            modelBuilder.Entity("QuickShift.Models.UserTenant", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("TenantId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserEmail")
+                    b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("UserTenants");
+                    b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("QuickShift.Models.UserTenant", b =>
+            modelBuilder.Entity("QuickShift.Models.Shift", b =>
                 {
-                    b.HasOne("QuickShift.Models.Tenant", "Tenant")
+                    b.HasOne("QuickShift.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("TenantId")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Tenant");
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }
