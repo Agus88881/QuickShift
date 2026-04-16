@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router'; // <--- 1. Importar Router
+import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { JwtHelperService } from '@auth0/angular-jwt';
@@ -24,7 +24,6 @@ export class AuthService {
     return this.http.post<any>(`${this.baseUrl}/auth/google`, { token, tenantName })
       .pipe(
         tap(response => {
-          // Guardamos el token
           this.storeToken(response.jwt);
           localStorage.setItem('tenantName', tenantName); 
           
@@ -36,7 +35,8 @@ export class AuthService {
   logout() {
     const tenantName = localStorage.getItem('tenantName') || 'harveynorman';
 
-    localStorage.clear(); 
+    localStorage.removeItem('jwt_token'); 
+    
     this.loggedInSubject.next(false);
 
     if (typeof google !== 'undefined') {
@@ -65,6 +65,6 @@ export class AuthService {
   }
 
   inviteUser(email: string, tenantId: number): Observable<any> {
-  return this.http.post(`${this.baseUrl}/auth/invite`, { email, tenantId });
-}
+    return this.http.post(`${this.baseUrl}/auth/invite`, { email, tenantId });
+  }
 }

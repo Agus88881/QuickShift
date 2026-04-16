@@ -1,14 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../../core/services/auth'; // Ajustá la ruta a tu servicio
+import { AuthService } from '../../core/services/auth'; 
 import { JwtHelperService } from '@auth0/angular-jwt';
+import { ShiftService } from '../../core/services/shift';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule], // Necesarios para el *ngIf y el ngModel
+  imports: [CommonModule, FormsModule],
   template: `
     <div style="padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto;">
       <h1 style="color: #2c3e50;">Panel de QuickShift</h1>
@@ -17,6 +18,16 @@ import { JwtHelperService } from '@auth0/angular-jwt';
         <p><strong>Estado:</strong> Sesión Activa ✅</p>
         <p><strong>Empresa (Tenant):</strong> {{ tenantDisplayName }}</p>
         <p><strong>Tu Rol: </strong> <span style="text-transform: capitalize; font-weight: bold; color: #2980b9;">{{ userRole }}</span></p>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <button type="button"
+                (click)="toggleShift()" 
+                [disabled]="loadingShift"
+                [style.background]="isWorking ? '#e67e22' : '#2ecc71'"
+                style="color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; transition: 0.3s;">
+          {{ loadingShift ? 'Procesando...' : (isWorking ? '⏹️ Finalizar Jornada' : '▶️ Iniciar Jornada') }}
+        </button>
       </div>
 
       <div *ngIf="userRole === 'Admin'" 
@@ -48,27 +59,65 @@ import { JwtHelperService } from '@auth0/angular-jwt';
 export class DashboardComponent implements OnInit {
   private jwtHelper = new JwtHelperService();
   
-  // Variables dinámicas
   inviteEmail: string = '';
   userRole: string = 'User';
   tenantDisplayName: string = '';
   tenantId: number = 0;
+  isWorking: boolean = false;
+  loadingShift: boolean = false;
 
-  constructor(private router: Router, private authService: AuthService) {}
+  constructor(
+    private router: Router, 
+    private authService: AuthService, 
+    private shiftService: ShiftService,
+    private cdr: ChangeDetectorRef 
+  ) {}
 
   ngOnInit(): void {
-    // 1. Recuperamos el nombre del tenant del LocalStorage para la UI
     this.tenantDisplayName = localStorage.getItem('tenantName') || 'Desconocido';
+    const savedWorkingStatus = localStorage.getItem('isWorking');
+    this.isWorking = savedWorkingStatus === 'true';
 
-    // 2. Leemos el Token para sacar el Rol y el TenantId real
     const token = localStorage.getItem('jwt_token');
     if (token) {
       const decodedToken = this.jwtHelper.decodeToken(token);
-      
-      // Ajustá estos nombres según cómo los pusiste en el GenerateJwtToken de C#
-      // Normalmente el rol está en: "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
       this.userRole = decodedToken["role"] || decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
       this.tenantId = decodedToken["tenantId"];
+    }
+  }
+
+  toggleShift() {
+    this.loadingShift = true;
+    
+    if (this.isWorking) {
+      this.shiftService.clockOut().subscribe({
+        next: (res) => {
+          this.isWorking = false;
+          this.loadingShift = false;
+          localStorage.setItem('isWorking', 'false');
+          this.cdr.detectChanges(); 
+          alert(`Turno cerrado. Horas trabajadas: ${res.hoursWorked}`);
+        },
+        error: (err) => {
+          this.loadingShift = false;
+          this.cdr.detectChanges();
+          alert("Error al cerrar el turno");
+        }
+      });
+    } else {
+      this.shiftService.clockIn().subscribe({
+        next: (res) => {
+          this.isWorking = true;
+          this.loadingShift = false;
+          localStorage.setItem('isWorking', 'true');
+          this.cdr.detectChanges(); 
+        },
+        error: (err) => {
+          this.loadingShift = false;
+          this.cdr.detectChanges();
+          alert("Error al iniciar el turno");
+        }
+      });
     }
   }
 
@@ -82,7 +131,7 @@ export class DashboardComponent implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        alert("Error al invitar: " + (err.error?.message || "No tienes permisos o el usuario ya existe."));
+        alert("Error al invitar: " + (err.error?.message || "No tienes permisos."));
       }
     });
   }

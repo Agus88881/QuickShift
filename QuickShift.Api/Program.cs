@@ -11,15 +11,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAngular", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
         policy.WithOrigins("http://localhost:4200")
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -36,7 +36,6 @@ builder.Services.AddDbContext<MasterDbContext>(options =>
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "QuickShift API", Version = "v1" });
-
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -46,34 +45,30 @@ builder.Services.AddSwaggerGen(c =>
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Description = "Pegá tu token así: Bearer {tu_token}"
     });
-
     c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
         {
             new Microsoft.OpenApi.Models.OpenApiSecurityScheme
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference { Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme, Id = "Bearer" }
             },
             Array.Empty<string>()
         }
     });
 });
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-
     options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 })
 .AddCookie(options =>
 {
     options.Cookie.SameSite = SameSiteMode.Lax;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-}).AddJwtBearer(options =>
+})
+.AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -83,8 +78,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
 })
 .AddGoogle(options =>
@@ -97,29 +91,31 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<ITenantService, TenantService>();
 
-
-
 var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseCors("AllowAngular");
 
 app.UseHttpsRedirection();
+
+app.UseRouting();
+app.UseCors("AllowAll");
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var masterContext = services.GetRequiredService<MasterDbContext>();
-
         if (masterContext.Database.GetPendingMigrations().Any())
         {
             masterContext.Database.Migrate();
-            Console.WriteLine("✅ Migraciones de la Master aplicadas con éxito.");
+            Console.WriteLine("✅ Migraciones de la Master aplicadas.");
         }
         else
         {
@@ -128,7 +124,8 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"❌ Error en el arranque de la Master: {ex.Message}");
+        Console.WriteLine($"❌ Error: {ex.Message}");
     }
 }
+
 app.Run();
